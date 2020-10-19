@@ -1,10 +1,13 @@
 const main = document.querySelector('main');
 const voicesSelect = document.getElementById('voices');
-const text = document.getElementById('text');
+const textArea = document.getElementById('text');
 const read = document.getElementById('read');
 const toggleBtn = document.getElementById('toggle');
 const closeBtn = document.getElementById('close');
+const textBoxEl = document.getElementById('text-box');
+const synth = window.speechSynthesis;
 
+const message = new SpeechSynthesisUtterance();
 const data = [
     {
       image: '../img/drink.jpg',
@@ -54,17 +57,70 @@ const data = [
       image: '../img/grandma.jpg',
       text: 'I Want To Go To Grandmas'
     }
-  ];
+];
 
-  data.forEach(createBox);
+data.forEach(createBox);
 
-  function createBox(item) {
-      const box = document.createElement('div');
-      const {image, text} = item;
-      box.classList.add('box');
-      box.innerHTML = `
-        <img src="${image}" alt="${text}">
-        <p class="info">${text}</p>
-      `;
-    main.appendChild(box);
+// Store voices
+let voices = [];
+
+function createBox(item) {
+    const box = document.createElement('div');
+    const {image, text} = item;
+    box.classList.add('box');
+    box.innerHTML = `
+      <img src="${image}" alt="${text}">
+      <p class="info">${text}</p>
+    `;
+
+  box.addEventListener('click', ()=>{
+    setTextMessage(text);
+    speakText();
+
+    box.classList.add('active');
+    setTimeout(()=> box.classList.remove('active'), 800);
+  });  
+  main.appendChild(box);
+}
+
+function getVoices() {
+  voices = synth.getVoices();
+  voices.forEach(voice => {
+    const option = document.createElement('option');
+    if(voice.name ==="Google US English"){
+      option.selected = true;
+    }
+    option.value = voice.name;
+    option.innerText = `${voice.name} ${voice.lang}`;
+    voicesSelect.appendChild(option);
+  });
+}
+
+function setTextMessage(text){
+  message.text = text;
+}
+
+function speakText(){
+  synth.speak(message);
+}
+
+function setVoice(e){
+   message.voice = voices.find(voice => voice.name === e.target.value);
+}
+
+toggleBtn.addEventListener('click', ()=> textBoxEl.classList.toggle('show'));
+closeBtn.addEventListener('click', ()=> textBoxEl.classList.remove('show'));
+synth.addEventListener('voiceschanged', getVoices);
+voicesSelect.addEventListener('change', setVoice);
+
+read.addEventListener('click', ()=>{
+  if(textArea.value){
+    setTextMessage(textArea.value);
+    speakText();
+  } else {
+    alert('Must put text in box');
   }
+
+});
+
+getVoices()
